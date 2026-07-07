@@ -1,1 +1,20 @@
-
+title: PowerShell Spawning Rundll32
+id: 0f93aca8-eb7c-4b75-afc8-8b624e66cdf9
+status: experimental
+description: Detects rundll32.exe being spawned by powershell.exe, an uncommon parent-child relationship often abused for defense evasion
+references:
+    - https://attack.mitre.org/techniques/T1218/011/
+author: Maheen Hasan
+date: 2026-07-07
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection:
+        ParentImage|endswith: '\powershell.exe'
+        Image|endswith: '\rundll32.exe'
+    condition: selection
+level: high
+tags:
+    - attack.defense_evasion
+    - attack.t1218.011
