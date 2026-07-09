@@ -5,7 +5,7 @@ A Microsoft Word process (winword.exe) launched powershell.exe as a child proces
 
 ## Why it's suspicious
 Word is a narrow-purpose application, its only job is opening and editing documents. 
-It has no legitimate reason to ever spawn PowerShell. This pattern is the signature 
+Under normal circumstances, it has no legitimate reason to spawn PowerShell. This pattern is the signature 
 of macro-based phishing: a victim opens a malicious document, enables macros, and 
 the embedded VBA code shells out to PowerShell to download or execute the real 
 payload. Because Word has no normal workflow that touches PowerShell, this detection 
@@ -28,3 +28,16 @@ against an approved script inventory before treating as benign.
 3. Check what PowerShell did next, network connections (likely payload download), 
    file writes, or further process spawns
 4. Check if the user recalls enabling macros, correlate with email logs if available
+
+## Validation
+
+I verified that Sysmon was successfully logging Microsoft Word process creation events (Event ID 1).
+
+To validate the required telemetry, I opened Microsoft Word, created and saved a test document, and confirmed that Sysmon recorded the following fields:
+
+- Image: `WINWORD.EXE`
+- ParentImage: `explorer.exe`
+
+I did not intentionally generate a `winword.exe → powershell.exe` parent-child relationship because it typically requires Office automation or malicious macros, which were outside the scope of this defensive project.
+
+This validation confirmed that the required telemetry for the detection rule is available and that Sysmon correctly records Word process creation events.
