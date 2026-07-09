@@ -23,17 +23,17 @@ Recommend checking CommandLine arguments to rule out known-benign scripts.
 
 ## Validation
 
-This rule was tested on a Windows 11 Pro virtual machine with Sysmon v15.21 installed.
+I tested this rule on Windows 11 Pro using Sysmon v15.21.
 
-To generate the event, PowerShell was used to start `rundll32.exe`:
+To generate the event, I opened PowerShell and ran:
 
-```powershell
 Start-Process rundll32.exe
-```
 
-Sysmon generated a Process Creation event (Event ID 1). The recorded event showed:
+This created a Sysmon Event ID 1 (Process Creation).
 
-- Image: `C:\Windows\System32\rundll32.exe`
-- ParentImage: `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
+The recorded event contained:
 
-The event matched the Sigma rule as expected, confirming that the detection logic correctly identifies this parent-child relationship.
+- Image: C:\Windows\System32\rundll32.exe
+- ParentImage: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+
+The event matched the rule because the child process was rundll32.exe and the parent process was powershell.exe.
