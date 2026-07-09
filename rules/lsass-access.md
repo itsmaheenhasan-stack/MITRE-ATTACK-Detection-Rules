@@ -1,37 +1,41 @@
 # LSASS Memory Access via Suspicious Process
 
 ## What happened
-A process outside the trusted system paths accessed lsass.exe's memory with 
-GrantedAccess rights consistent with reading process memory (dump behavior).
+
+A process accessed `lsass.exe` with GrantedAccess rights commonly associated with reading another process's memory. The rule excludes some common Windows system paths to reduce expected administrative activity.
 
 ## Why it's suspicious
-LSASS holds cached credentials from Credential Manager, SAM, and CNG Key Isolation, 
-three credential stores in one process. Legitimate access is almost entirely limited 
-to Windows system processes and antivirus. Any outside process reading LSASS with 
-these specific access flags is very likely attempting to extract credentials for 
-lateral movement, either via known tools like procdump, or built-in abuse paths 
-like comsvcs.dll or Task Manager's dump feature.
+
+LSASS stores sensitive authentication data such as cached credentials, NTLM hashes, Kerberos tickets, and other security secrets. Legitimate access is usually limited to Windows system components and security software. If an unexpected process reads LSASS memory using these access rights, it may indicate an attempt to dump credentials for privilege escalation or lateral movement.
 
 ## Which logs detect it
-Sysmon Event ID 10 (ProcessAccess), fields: TargetImage, SourceImage, GrantedAccess
+
+Sysmon Event ID 10 (ProcessAccess)
+
+Fields used:
+
+- TargetImage
+- SourceImage
+- GrantedAccess
 
 ## False positives
-Windows Defender and other AV engines legitimately scan LSASS memory. The filter 
-block excludes known system paths, but this is a weak defense, an attacker can 
-spoof a process path string. A stronger version should also check process signing 
-and hash reputation, not just path.
+
+Windows Defender, enterprise EDR products, backup software, and other security tools may legitimately access LSASS. This rule reduces some expected activity by filtering common Windows system paths, but this is not a perfect approach because attackers can imitate trusted locations. A stronger detection would also verify process signatures, hashes, or reputation.
 
 ## Investigation steps
-1. Check SourceImage, what process actually requested access, and where it's 
-   located on disk
-2. Check if the source process is signed and by whom
-3. Check for a dump file being written to disk shortly after, common next step
-4. Check parent process of the source, how did it get launched
+
+1. Check which process accessed LSASS (`SourceImage`).
+2. Verify whether the process is digitally signed and whether its location is expected.
+3. Look for a memory dump file created shortly afterward.
+4. Investigate the parent process to understand how the accessing process was launched.
+5. Review nearby events for suspicious process creation, network activity, or additional credential access attempts.
 
 ## Validation
 
-Sysmon Event ID 10 (ProcessAccess) logging was successfully enabled and verified on the test system.
+I enabled Sysmon ProcessAccess logging (Event ID 10) and confirmed that my system was generating the telemetry required for this rule.
 
-A benign ProcessAccess event was observed, confirming that Sysmon was collecting Event ID 10 telemetry. However, a matching LSASS access event was not intentionally generated because modern Windows security features may prevent or restrict user-mode access to LSASS on fully patched systems.
+To verify this, I generated a benign ProcessAccess event and confirmed that Sysmon recorded the fields used by the detection, including `TargetImage`, `SourceImage`, and `GrantedAccess`.
 
-The Sigma rule was therefore validated by confirming that the required telemetry (ProcessAccess events containing TargetImage, SourceImage, and GrantedAccess) was available and that unrelated ProcessAccess events did not match the detection logic.
+I did not intentionally generate an LSASS memory access event because modern Windows 11 security features can restrict user-mode access to LSASS on fully patched systems. Instead, I verified that the required telemetry was available and confirmed that unrelated ProcessAccess events did **not** satisfy this rule's detection logic.
+
+This validation confirmed that the Sigma rule is built on the correct Sysmon event and required fields, even though a real credential-dumping scenario was not reproduced in the test environment.
