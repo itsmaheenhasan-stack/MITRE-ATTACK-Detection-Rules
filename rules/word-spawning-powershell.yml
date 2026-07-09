@@ -1,6 +1,6 @@
 title: Microsoft Word Spawning PowerShell
 id: 9c101b78-d3b3-41b9-a542-65ad0371e3eb
-status: experimental
+status: test
 description: Detects winword.exe spawning powershell.exe, consistent with macro-based phishing payload execution
 references:
     - https://attack.mitre.org/techniques/T1566/001/
