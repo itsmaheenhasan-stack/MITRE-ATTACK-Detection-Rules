@@ -27,3 +27,11 @@ and hash reputation, not just path.
 2. Check if the source process is signed and by whom
 3. Check for a dump file being written to disk shortly after, common next step
 4. Check parent process of the source, how did it get launched
+
+## Validation
+
+Sysmon Event ID 10 (ProcessAccess) logging was successfully enabled and verified on the test system.
+
+A benign ProcessAccess event was observed, confirming that Sysmon was collecting Event ID 10 telemetry. However, a matching LSASS access event was not intentionally generated because modern Windows security features may prevent or restrict user-mode access to LSASS on fully patched systems.
+
+The Sigma rule was therefore validated by confirming that the required telemetry (ProcessAccess events containing TargetImage, SourceImage, and GrantedAccess) was available and that unrelated ProcessAccess events did not match the detection logic.
